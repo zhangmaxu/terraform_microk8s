@@ -14,3 +14,9 @@ variable "key_name" {
   type        = string
 
 }
+
+variable "azs" {
+  description = "the region and zones of aws"
+  type = list(string)
+  
+}

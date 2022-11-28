@@ -125,7 +125,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "microk8s_demo" {
   ami               = data.aws_ami.ubuntu.id
   instance_type     = var.instance_type
-  availability_zone = local.azs[0]
+  availability_zone = var.azs[0]
   # subnet_id  = aws_subnet.zivAugustsubnet.id
   subnet_id              = aws_subnet.microk8s_demo[0].id
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
