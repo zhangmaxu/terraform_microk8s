@@ -16,3 +16,9 @@ variable "key_name" {
   type        = string
   default     = "Ziv_Zhang_Virginia"
 }
+
+variable "azs" {
+  description = "the region and zones of aws"
+  type        = list(string)
+  default     = ["us-east-1a", "us-east-1b"]
+}
