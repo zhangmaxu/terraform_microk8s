@@ -20,12 +20,22 @@ https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 ## Stage 3
 Confirm which region you want to depoly(e.g. "us-east-1a", "us-east-1b")
-native to Prod > variables.tf
-change the value of azs
+
+3.1 native to Prod > variables.tf
+3.2 change the value of var.azs
 
 
 ## Stage 4
 Confirm which region you want to depoly(e.g. "us-east-1a", "us-east-1b")
 Please create key pair in advance 
 
+4.1 copy the pem to path: /Prod/xxx.pem
+4.2 copy the name of pem to /Prod/variables.tf > var.key_name 
 
+
+
+## common command 
+Terraform init
+Terraform plan
+Terraform apply -auto-approve
+Terraform destroy -auto-approve
