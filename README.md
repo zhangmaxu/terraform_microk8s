@@ -26,11 +26,10 @@ Confirm which region you want to depoly(e.g. "us-east-1a", "us-east-1b")
 
 
 ## Stage 4
-Confirm which region you want to depoly(e.g. "us-east-1a", "us-east-1b")
-Please create key pair in advance 
+Confirm the name of pem
 
-4.1 copy the pem to path: /Prod/xxx.pem
-4.2 copy the name of pem to /Prod/variables.tf > var.key_name 
+4.1 native to Prod > variables.tf
+4.2 change the value of var.key_pair_file
 
 
 
