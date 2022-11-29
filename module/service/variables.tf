@@ -9,11 +9,6 @@ variable "instance_type" {
 
 }
 
-variable "key_name" {
-  description = "the name of key to connect ec2 via ssh"
-  type        = string
-
-}
 
 variable "azs" {
   description = "the region and zones of aws"
