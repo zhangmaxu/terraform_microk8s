@@ -16,4 +16,5 @@ module "service" {
   instance_type = var.instance_type
   key_name      = var.key_name
   azs           = var.azs
+  key_pair_file = var.key_pair_file
 }
