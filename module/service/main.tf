@@ -31,11 +31,11 @@ resource "aws_internet_gateway" "gw" {
 
 //create subnet
 resource "aws_subnet" "microk8s_demo" {
-  count = length(local.azs)
+  count = length(var.azs)
 
   vpc_id                  = aws_vpc.microk8s_demo.id
   cidr_block              = local.cidr_block[count.index]
-  availability_zone       = local.azs[count.index]
+  availability_zone       = var.azs[count.index]
   map_public_ip_on_launch = "true"
   tags = {
     Name = "${var.owner}-subnet-${count.index}"
@@ -169,7 +169,7 @@ resource "aws_instance" "microk8s_demo" {
 }
 
 locals {
-  azs        = ["us-east-1a", "us-east-1b"]
+  # azs        = ["us-east-1a", "us-east-1b"]
   cidr_block = ["10.0.10.0/24", "10.0.20.0/24"]
   user_data  = <<-EOF
 #!/bin/bash
