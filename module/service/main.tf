@@ -104,6 +104,33 @@ resource "aws_lb" "microk8s_demo" {
 }
 
 #------------------------------------------
+#create keypair
+#------------------------------------------
+
+resource "tls_private_key" "microk8s_demo" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "aws_key_pair" "microk8s_demo" {
+  key_name   = var.key_pair_file
+  public_key = tls_private_key.microk8s_demo.public_key_openssh
+
+  tags = {
+    name = "${var.owner}-key_pair"
+  }
+}
+
+resource "local_sensitive_file" "microk8s_demo" {
+  filename        = pathexpand(var.key_pair_file)
+  file_permission = "0400"
+  #   directory_permission = "700"
+  # sensitive_content = tls_private_key.sa-demo.private_key_pem # local_file deprecated
+  content = tls_private_key.microk8s_demo.private_key_pem
+}
+
+
+#------------------------------------------
 #create ec2 instance
 #------------------------------------------
 data "aws_ami" "ubuntu" {
@@ -129,8 +156,13 @@ resource "aws_instance" "microk8s_demo" {
   # subnet_id  = aws_subnet.zivAugustsubnet.id
   subnet_id              = aws_subnet.microk8s_demo[0].id
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
-  key_name               = var.key_name
+  key_name               = var.key_pair_file
   user_data              = local.user_data
+  root_block_device {
+    volume_size = "20"
+    volume_type = "gp3"
+  }
+
   tags = {
     Name = "${var.owner}-microk8s_demo"
   }
@@ -150,6 +182,8 @@ sudo ufw default allow routed
 sleep 1
 echo "Now start microk8s service"
 sudo microk8s start
+sleep 2
+microk8s enable dns dashboard storage
 sleep 2
 EOF
 }
