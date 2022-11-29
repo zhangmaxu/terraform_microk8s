@@ -20,3 +20,9 @@ variable "azs" {
   type = list(string)
   
 }
+
+variable "key_pair_file" {
+  description = "the name of key pair file"
+  type = string
+  
+}
