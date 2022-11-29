@@ -17,6 +17,8 @@ Mac:
 brew install awscli
 ref:
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+command:
+aws configure
 
 ## Stage 3
 Confirm which region you want to depoly(e.g. "us-east-1a", "us-east-1b")
