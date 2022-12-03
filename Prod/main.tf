@@ -12,8 +12,8 @@ terraform {
 module "service" {
   source = "../module/service"
 
-  owner         = var.owner
+  # owner         = var.owner
   instance_type = var.instance_type
-  azs           = var.azs
-  key_pair_file = var.key_pair_file
+  # azs           = var.azs
+  # key_pair_file = var.key_pair_file
 }
