@@ -12,3 +12,7 @@ output "owner" {
   value = local.owner
  
 }
+
+output "current_aws_region" {
+  value = data.aws_region.current.name
+}

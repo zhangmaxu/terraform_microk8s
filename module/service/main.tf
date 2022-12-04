@@ -221,6 +221,8 @@ data "shell_script" "username" {
   }
 }
 
+data "aws_region" "current" {}
+
 locals {
   # azs        = ["us-east-1a", "us-east-1b"]
   owner          = data.shell_script.username.output["username"]
