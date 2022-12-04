@@ -4,7 +4,12 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.0"
     }
+    shell = {
+      source  = "scottwinkler/shell"
+      version = "~> 1.0"
+    }
   }
+  required_version = ">= 0.14.9"
 }
 
 
@@ -16,7 +21,7 @@ resource "aws_vpc" "microk8s_demo" {
   instance_tenancy     = "default"
   enable_dns_hostnames = true
   tags = {
-    Name = "${var.owner}-vpc"
+    Name = "${local.owner}-vpc"
   }
 }
 
@@ -25,21 +30,22 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.microk8s_demo.id
 
   tags = {
-    Name = "${var.owner}-gw"
+    Name = "${local.owner}-gw"
   }
 }
 
 //create subnet
 resource "aws_subnet" "microk8s_demo" {
-  count = length(var.azs)
+  count = random_shuffle.az.result_count
 
   vpc_id                  = aws_vpc.microk8s_demo.id
   cidr_block              = local.cidr_block[count.index]
-  availability_zone       = var.azs[count.index]
+  availability_zone       = random_shuffle.az.result[count.index]
   map_public_ip_on_launch = "true"
   tags = {
-    Name = "${var.owner}-subnet-${count.index}"
+    Name = "${local.owner}-subnet-${count.index}"
   }
+
 }
 
 //create route_tale
@@ -52,7 +58,7 @@ resource "aws_route_table" "microk8s_demo" {
   }
 
   tags = {
-    Name = "${var.owner}-microk8s_demo"
+    Name = "${local.owner}-microk8s_demo"
   }
 }
 
@@ -77,7 +83,23 @@ resource "aws_security_group" "allow_ssh" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [local.ext_ip_cidr_32]
+  }
+
+  ingress {
+    description = "http from VPC"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [local.ext_ip_cidr_32]
+  }
+
+  ingress {
+    description = "https from VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [local.ext_ip_cidr_32]
   }
 
 
@@ -90,16 +112,16 @@ resource "aws_security_group" "allow_ssh" {
   }
 
   tags = {
-    Name = "${var.owner}-allow_ssh"
+    Name = "${local.owner}-allow_ssh"
   }
 }
 
 
 resource "aws_lb" "microk8s_demo" {
-  name               = "${var.owner}-alb"
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.allow_ssh.id]
-  subnets = [for subnet in aws_subnet.microk8s_demo : subnet.id]
+  name                       = "${local.owner_alb[0]}-alb"
+  load_balancer_type         = "application"
+  security_groups            = [aws_security_group.allow_ssh.id]
+  subnets                    = [for subnet in aws_subnet.microk8s_demo : subnet.id]
   enable_deletion_protection = false
 }
 
@@ -113,16 +135,16 @@ resource "tls_private_key" "microk8s_demo" {
 }
 
 resource "aws_key_pair" "microk8s_demo" {
-  key_name   = var.key_pair_file
+  key_name   = local.owner
   public_key = tls_private_key.microk8s_demo.public_key_openssh
 
   tags = {
-    name = "${var.owner}-key_pair"
+    name = "${local.owner}-key_pair"
   }
 }
 
 resource "local_sensitive_file" "microk8s_demo" {
-  filename        = pathexpand(var.key_pair_file)
+  filename        = pathexpand(local.owner)
   file_permission = "0400"
   #   directory_permission = "700"
   # sensitive_content = tls_private_key.sa-demo.private_key_pem # local_file deprecated
@@ -152,11 +174,11 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "microk8s_demo" {
   ami               = data.aws_ami.ubuntu.id
   instance_type     = var.instance_type
-  availability_zone = var.azs[0]
+  availability_zone = random_shuffle.az.result[0]
   # subnet_id  = aws_subnet.zivAugustsubnet.id
   subnet_id              = aws_subnet.microk8s_demo[0].id
   vpc_security_group_ids = [aws_security_group.allow_ssh.id]
-  key_name               = var.key_pair_file
+  key_name               = local.owner
   user_data              = local.user_data
   root_block_device {
     volume_size = "20"
@@ -164,14 +186,51 @@ resource "aws_instance" "microk8s_demo" {
   }
 
   tags = {
-    Name = "${var.owner}-microk8s_demo"
+    Name = "${local.owner}-microk8s_demo"
   }
 }
 
+#------------------------------------------
+#create random_shuffle az
+#------------------------------------------
+resource "random_shuffle" "az" {
+  #   input        = ["us-west-1a", "us-west-1c", "us-west-1d", "us-west-1e"]
+  input = [for name in data.aws_availability_zones.available.names : name]
+
+  result_count = 2
+}
+
+
+
+#------------------------------------------
+#data resource
+#------------------------------------------
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+data "external" "current_ip" {
+  program = ["bash", "-c", "curl -s 'https://api.ipify.org?format=json'"]
+}
+
+data "shell_script" "username" {
+  lifecycle_commands {
+    read = <<-EOF
+        echo "{\"username\": \"$(whoami)\"}"
+    EOF
+  }
+}
+
+data "aws_region" "current" {}
+
 locals {
   # azs        = ["us-east-1a", "us-east-1b"]
-  cidr_block = ["10.0.10.0/24", "10.0.20.0/24"]
-  user_data  = <<-EOF
+  owner          = data.shell_script.username.output["username"]
+  owner_alb = split("_", data.shell_script.username.output["username"])
+  cidr_block     = ["10.0.10.0/24", "10.0.20.0/24"]
+  split_ext_ip   = split(".", data.external.current_ip.result.ip)
+  ext_ip_cidr_32 = "${data.external.current_ip.result.ip}/32"
+  user_data      = <<-EOF
 #!/bin/bash
 echo "Now Install Microk8s"
 sudo snap install microk8s --classic --channel=1.18/stable

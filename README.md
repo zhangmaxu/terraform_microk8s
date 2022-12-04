@@ -21,22 +21,12 @@ command:
 aws configure
 
 ## Stage 3
-Confirm which region you want to depoly(e.g. "us-east-1a", "us-east-1b")
-
-3.1 native to Prod > variables.tf
-3.2 change the value of var.azs
-
-
-## Stage 4
-Confirm the name of pem
-
-4.1 native to Prod > variables.tf
-4.2 change the value of var.key_pair_file
-
+3.1 Natibe to /Prod path
+3.2 run common command below
 
 
 ## common command 
-Terraform init
-Terraform plan
-Terraform apply -auto-approve
-Terraform destroy -auto-approve
+terraform init
+terraform plan
+terraform apply -auto-approve
+terraform destroy -auto-approve
