@@ -16,3 +16,7 @@ output "owner" {
 output "current_aws_region" {
   value = data.aws_region.current.name
 }
+
+output "current_ip" {
+  value = data.external.current_ip
+}
