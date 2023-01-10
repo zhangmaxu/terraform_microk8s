@@ -15,3 +15,7 @@ output "current_aws_region" {
 output "SSH_connect" {
     value = "ssh -i ${module.service.owner} ubuntu@${module.service.instance_public_dns}"
 }
+
+output "current_ip" {
+  value = module.service.current_ip
+}

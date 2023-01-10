@@ -184,7 +184,6 @@ resource "aws_instance" "microk8s_demo" {
     volume_size = "20"
     volume_type = "gp3"
   }
-
   tags = {
     Name = "${local.owner}-microk8s_demo"
   }
