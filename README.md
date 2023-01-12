@@ -67,7 +67,7 @@ Default region name [None]: us-west-2(inout which aws region you want to login)
 Default output format [None]: json
 
 ## Stage 3
-3.1 Native to /Prod path
+3.1 Navigate to /Prod path
 3.2 run common command below
 
 
